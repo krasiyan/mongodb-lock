@@ -115,7 +115,8 @@ Although not adviced, it is possible to change them in the runtime.
 
 ## Notes ##
 
-This module aims to use MongoDB's atomic method wrapped by Mongoose. However please note that since this is a very early version, race conditions are possible.
+- This module aims to use MongoDB's atomic method wrapped by Mongoose. However please note that since this is a very early version, race conditions are possible.
+- Currently when a lock expires and is re-acquired or when it is released, its entry is removed from the database.
 
 ## Todo ##
 
@@ -126,6 +127,7 @@ This module aims to use MongoDB's atomic method wrapped by Mongoose. However ple
 - Use MongoDB's TTL on the lock entries.
 - Add a `forceAcquire` method.
 - Periodically poll the databse when a lock is acquired to ensure its state and otherwise emit a `release` event.
+- Add option to persist expired logs in the database.
 
 ## Changelog ##
 
