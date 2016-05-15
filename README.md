@@ -8,6 +8,9 @@ Make sure to have an active `mongoose` connection before instantiating the lock.
 
 ```js
 mongoose.connect('mongodb://localhost/mongoose-distributed-lock', function(err, connection) {
+  if (err) {
+    return console.error(err)
+  }
 
   var lock = Lock('testLock', options)
 })
@@ -128,6 +131,7 @@ Although not adviced, it is possible to change them in the runtime.
 - Add a `forceAcquire` method.
 - Periodically poll the databse when a lock is acquired to ensure its state and otherwise emit a `release` event.
 - Add option to persist expired logs in the database.
+- Update `mongoose`, `async`, `mocha` and `chai` versions.. duh...
 
 ## Changelog ##
 
