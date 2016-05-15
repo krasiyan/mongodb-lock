@@ -1,6 +1,6 @@
 {
   "name": "mongoose-distributed-lock",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Easy distributed locks based MongoDB's atomic operations with Mongoose.",
   "main": "index.js",
   "scripts": {
@@ -20,11 +20,13 @@
     "email": "hello@krasiyan.com",
     "url": "http://krasiyan.com/"
   },
-  "contributors": [{
-    "name": "Andrew Chilton",
-    "email": "andychilton@gmail.com",
-    "url": "http://chilts.org/"
-  }],
+  "contributors": [
+    {
+      "name": "Andrew Chilton",
+      "email": "andychilton@gmail.com",
+      "url": "http://chilts.org/"
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "git@github.com:krasiyan/mongoose-distributed-lock.git"
