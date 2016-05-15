@@ -1,33 +1,47 @@
 {
-  "name": "mongodb-lock",
-  "version": "0.2.3",
-  "description": "Locks which uses MongoDB's atomic operations.",
-  "main": "mongodb-lock.js",
+  "name": "mongoose-distributed-lock",
+  "version": "0.0.0",
+  "description": "Easy distributed locks based MongoDB's atomic operations with Mongoose.",
+  "main": "index.js",
   "scripts": {
-    "test": "set -e; for FILE in test/*.js; do node $FILE; done"
+    "test": "mocha test"
   },
-  "dependencies": {},
+  "dependencies": {
+    "mongoose": "4.2.9",
+    "async": "1.5.0"
+  },
   "devDependencies": {
     "mongodb": "^1.4.19",
-    "tape": "^3.0.1"
+    "mocha": "^1.20.1",
+    "chai": "^1.9.1"
   },
   "author": {
+    "name": "Krasiyan Nedelchev",
+    "email": "hello@krasiyan.com",
+    "url": "http://krasiyan.com/"
+  },
+  "contributors": [{
     "name": "Andrew Chilton",
     "email": "andychilton@gmail.com",
     "url": "http://chilts.org/"
-  },
+  }],
   "repository": {
     "type": "git",
-    "url": "git://github.com/chilts/mongodb-lock.git"
+    "url": "git@github.com:krasiyan/mongoose-distributed-lock.git"
   },
   "bugs": {
-    "url": "http://github.com/chilts/mongodb-lock/issues",
-    "mail": "andychilton@gmail.com"
+    "url": "https://github.com/krasiyan/mongoose-distributed-lock",
+    "mail": "hello@krasiyan.com"
   },
-  "homepage": "https://github.com/chilts/mongodb-lock",
+  "homepage": "https://github.com/krasiyan/mongoose-distributed-lock",
   "license": "MIT",
   "keywords": [
     "mongodb",
+    "mongoose",
+    "distributed",
     "lock"
-  ]
+  ],
+  "engines": {
+    "node": ">= 0.10.32"
+  }
 }

@@ -1,36 +1,40 @@
-# mongodb-lock #
+# mongoose-distributed-lock #
 
-[![Build Status](https://travis-ci.org/chilts/mongodb-lock.png)](https://travis-ci.org/chilts/mongodb-lock)
-[![NPM](https://nodei.co/npm/mongodb-lock.png?mini=true)](https://nodei.co/npm/mongodb-lock/)
+An easy module for distributed state locks with Mongoose.
 
-A really light-weight way to get distributed locks with a nice API if you're already using MongoDB.
-## Synopsis ##
+## Instantiating a lock ##
 
-Create a connection to your MongoDB database, and use it to create a lock object:
+Make sure to have an active `mongoose` connection before instantiating the lock.
 
 ```js
-var mongodb = require('mongodb')
-var mongoDbLock = require('mongodb-lock)
+mongoose.connect('mongodb://localhost/mongoose-distributed-lock', function(err, connection) {
 
-var con = 'mongodb://localhost:27017/test'
-
-mongodb.MongoClient.connect(con, function(err, db) {
-  // supply the database, the collection to use and the lock name
-  var lock = mongoDbLock(db, 'locks', 'database-backup')
+  var lock = Lock('testLock', options)
 })
 ```
 
-Now, acquire the lock:
+## Options ##
+
+You can specify the following options:
 
 ```js
-lock.acquire(function(err, code) {
+var lock = Lock('testLock', {
+  timeout: 60000, // the maximum time a lock can aqcuired for in miliseconds before granting it to other issues is possible again; defaults to 60000
+  pollInterval: 500, // the interval in which `pollAcquire` will execute in miliseconds; default to 500
+})
+```
+
+## Acquiring the lock ##
+
+```js
+lock.acquire(function(err, lockAcquired) {
   if (err) {
-    return console.error(code)
+    return console.error(err)
   }
 
-  if ( code ) {
+  if ( lockAcquired ) {
     // lock was acquired
-    console.log('code=' + code)
+    console.log('lock acquired successfuly')
   }
   else {
     // lock was not acquired
@@ -38,76 +42,104 @@ lock.acquire(function(err, code) {
 })
 ```
 
-Once you have a lock, you have a 30 second timeout until the lock is released. You can release it earlier by supplying the code:
+Once you have a lock, you have `lock.timeout` time until the lock is released. You can release it earlier via the `release()` method.
+
+If the lock is currently in use (lets say by another instance of your code) then `lockAquired` will be `false`. If you want to ensure that the lock will be acquired you can use `pollAcquire`.
+
+`aqcuire` can return the following errors:
+
+- `lock_already_aquired` - when the lock has already been acquired and since has not been released
+
+
+## Acquiring the lock via polling ##
 
 ```js
-lock.release(code, function(err, ok) {
+lock.pollAcquire(function(err, lockAcquired) {
   if (err) {
     return console.error(err)
   }
 
-  if (ok) {
-    console.log('Lock released ok')
+  if ( lockAcquired ) {
+    // lock was acquired
+    console.log('lock acquired successfuly')
   }
   else {
-    console.log("Lock was not released, perhaps it's already been released or timed out")
+    // lock was not acquired
   }
 })
 ```
 
-## MongoDB Indexes ##
+`pollAqcuire` will poll the database every `lock.pollInterval` miliseconds untill the lock is acquired or until it has reached its maximum attempts. The maximum poll attemts are defined as `(timeout / pollInterval) + 2` to ensure that until the last moment possible the lock can be acquired.
 
-You should make sure any indexes have been added to the collection to make the queries faster:
+`pollAqcuire` can return the following errors:
+
+- `lock_already_aquired` - when the lock has already been acquired and since has not been released
+- `timeout in pollAquire for lock name LOCK_NAME` - when the maximum attempts to poll the database have been reached
+
+## Releasing the lock ##
 
 ```js
-lock.ensureIndexes(function(err) {
+lock.release(function(err, lockTimeouted) {
   if (err) {
     return console.error(err)
   }
-  // all ok
+
+  if (!lockTimeouted) {
+    console.log('lock released ok')
+  }
+  else {
+    console.log('this INSTANCE of the lock is currently released, however the lock has probably timeouted')
+  }
 })
 ```
 
-## Multiple Locks ##
+Note that if `lockTimeouted` is `true` this instance of the lock has timeouted and is de-facto released. However another issuer has most likely taken the lock.
 
-Multiple locks can use the same collection and operate quite independently:
+`release` can return the following errors:
 
-```js
-var dbBackupLock = mongoDbLock(db, 'locks', 'database-backup')
-var hourlyStats = mongoDbLock(db, 'locks', 'hourly-stats')
-var sendInvoices = mongoDbLock(db, 'locks', 'send-invoices')
-```
+- `releasing_not_aquired_lock` - when the lock has not been acquired in order to be released
 
-## Options ##
+## Advanced ##
 
-Currently there is only the option of the timeout. Currently the default is 30 seconds, but you can change it (in milliseconds):
+Each lock has the following properties:
 
 ```js
-// lock for 60 seconds
-var uploadFiles = mongoDbLock(db, 'locks', 'upload-files', { timeout : 60 * 1000})
-
-uploadFiles.lock(function(err, code) {
-  // locked for 60s
-})
+name // the name of the lock
+lockId // the mongoose ObjectID of the lock DB entry (if one has been acquired)
+timeout // the maximum time a lock can aqcuired for in miliseconds
+pollInterval // the interval in which `pollAcquire` will execute in miliseconds
+probeMaxAttempts // the maximum possible times pollAcquire can iterate before returning a timeout error
 ```
 
-### 0.2.0 (2015-04-17) ###
+Although not adviced, it is possible to change them in the runtime.
 
-* [FIX] made sure that a 2nd .release() doesn't return ok (ie. it didn't do anything)
+## Notes ##
 
-### 0.1.0 (2015-04-17) ###
+This module aims to use MongoDB's atomic method wrapped by Mongoose. However please note that since this is a very early version, race conditions are possible.
 
-* [NEW] added ability to add indexes to MongoDB
-* [NEW] added lock()
-* [NEW] added release()
+## Todo ##
 
-## Author ##
+- :warning: Give the ability to change to collection name instead of using the one hardcoded in `model.js`.
+- Add an infinite `pollAquire` method.
+- Emit events on acquiring / timeout.
+- Add calls to `model.getIndexes` and `model.ensureIndexes` on instantination.
+- Use MongoDB's TTL on the lock entries.
+- Add a `forceAcquire` method.
+- Periodically poll the databse when a lock is acquired to ensure its state and otherwise emit a `release` event.
 
-Written by [Andrew Chilton](http://chilts.org/) -
+## Changelog ##
+
+### 0.0.0 (2016-05-13) ###
+
+- Initial implementation with mongoose and `pollAcquire`
+
+## Authors ##
+
+Originally written by [Andrew Chilton](http://chilts.org/) -
 [Twitter](https://twitter.com/andychilton).
+
+and forked by [Krasiyan Nedelchev](http://krasiyan.com)
 
 ## License ##
 
-MIT - http://chilts.mit-license.org/2014/
-
-(Ends)
+MIT

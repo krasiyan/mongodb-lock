@@ -1,0 +1,6 @@
+--require ./test/bootstrap.js
+--recursive
+--slow 5000
+--timeout 10000
+--check-leaks
+--globals Promise
