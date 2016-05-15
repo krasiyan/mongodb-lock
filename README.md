@@ -1,4 +1,4 @@
-# mongoose-distributed-lock #
+# mongoose-distributed-lock [![npm version](https://badge.fury.io/js/mongoose-distributed-lock.svg)](https://badge.fury.io/js/mongoose-distributed-lock) #
 
 An easy module for distributed state locks with Mongoose.
 
